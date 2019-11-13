@@ -73,6 +73,10 @@ function! s:tabnew()
   execute (tabpagenr()-1).'tabnew'
 endfunction
 
+function! s:ene()
+  execute 'ene'
+endfunction
+
 function! s:gbrowse()
   let sha = gv#sha()
   if empty(sha)
@@ -110,29 +114,43 @@ endfunction
 function! s:split(tab)
   if a:tab
     call s:tabnew()
-  elseif getwinvar(winnr('$'), 'gv')
-    $wincmd w
+  " winnr return the number of the most right window
+  " elseif getwinvar(winnr('$'), 'gv')
+  " $wincmd w " move to the most right window
+  elseif exists('g:gv_commit_detail_winnr') && getwinvar(g:gv_commit_detail_winnr, 'gv')
+    execute g:gv_commit_detail_winnr.'wincmd w'
     enew
   else
-    vertical botright new
+    " vertical botright new
+    vertical new
+    let g:gv_commit_detail_winnr=winnr()
   endif
+  " set window variable
   let w:gv = 1
 endfunction
 
+" open a commit detail
 function! s:open(visual, ...)
   let [type, target] = s:type(a:visual)
 
+  " kalo bukan commit kasih pesan
   if empty(type)
+    echom 'log type is empty'
     return s:shrug()
+  " kalo link, goto link tsb
   elseif type == 'link'
+    echom 'log type is link'
     return s:browse(target)
   endif
 
   call s:split(a:0)
   if type == 'commit'
+    echom 'log type is commit'
+    " escape(target, ' ') isinya => fugitive:///var/www/html/rse-aplas-paper/.git//bc16856bcf986d1d4950544c6c0d60946efa7f85
     execute 'e' escape(target, ' ')
     nnoremap <silent> <buffer> gb :Gbrowse<cr>
   elseif type == 'diff'
+    echom 'log type is diff'
     call s:scratch()
     call s:fill(target)
     setf diff
@@ -374,7 +392,8 @@ endfunction
 
 function! s:setup(git_dir, git_origin)
   " new tab
-  call s:tabnew()
+  " call s:tabnew()
+  call s:ene()
   " make current buffer a scratch buffer
   call s:scratch()
 
