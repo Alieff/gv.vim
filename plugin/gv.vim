@@ -253,6 +253,7 @@ function! s:dot()
   return empty(sha) ? '' : ':Git  '.sha."\<s-left>\<left>"
 endfunction
 
+" set the log coloring
 function! s:syntax()
   setf GV
   syn clear
@@ -325,6 +326,7 @@ function! s:syntax()
 
 endfunction
 
+" define the mapping of this plugin
 function! s:maps()
   nnoremap <silent> <buffer> q    :$wincmd w <bar> close<cr>
   nnoremap <silent> <buffer> gb   :call <sid>gbrowse()<cr>
@@ -371,7 +373,9 @@ function! s:maps()
 endfunction
 
 function! s:setup(git_dir, git_origin)
+  " new tab
   call s:tabnew()
+  " make current buffer a scratch buffer
   call s:scratch()
 
   if exists('g:fugitive_github_domains')
@@ -391,6 +395,7 @@ function! s:setup(git_dir, git_origin)
   let b:git_dir = a:git_dir
 endfunction
 
+" get '.git' path
 function! s:git_dir()
   if empty(get(b:, 'git_dir', ''))
     return fugitive#extract_git_dir(expand('%:p'))
@@ -398,10 +403,12 @@ function! s:git_dir()
   return b:git_dir
 endfunction
 
+" set the current buffer as scratch buffer (no actual file)
 function! s:scratch()
   setlocal buftype=nofile bufhidden=wipe noswapfile
 endfunction
 
+" fill the current buffer with git log result
 function! s:fill(cmd)
   setlocal modifiable
   silent execute 'read' escape('!'.a:cmd, '%')
@@ -516,6 +523,7 @@ function! s:gv(bang, visual, line1, line2, args) abort
     return s:warn('fugitive not found')
   endif
 
+  " get .git path
   let git_dir = s:git_dir()
   if empty(git_dir)
     return s:warn('not in git repo')
@@ -530,12 +538,14 @@ function! s:gv(bang, visual, line1, line2, args) abort
       execute cd escape(root, ' ')
     endif
     if a:args =~ '?$'
+      echo 'args is nothing'
       if len(a:args) > 1
         return s:warn('invalid arguments')
       endif
       call s:check_buffer(fugitive_repo, expand('%'))
       call s:gl(bufnr(''), a:visual)
-    else
+    else " masuk kesini, yg diatas gatau apa, mungkin kalo ada argumennya
+      echo 'args is something'
       let log_opts = extend(gv#shellwords(a:args), s:log_opts(fugitive_repo, a:bang, a:visual, a:line1, a:line2))
       call s:setup(git_dir, fugitive_repo.config('remote.origin.url'))
       call s:list(fugitive_repo, log_opts)
