@@ -158,6 +158,13 @@ function! s:squash()
   execute 'G stash pop'
 endfunction
 
+function! s:amend()
+  let sha = gv#sha()
+  if empty(sha)
+    return s:shrug()
+  endif
+  execute 'Gcommit --amend'
+endfunction
 
 function! s:dot()
   let sha = gv#sha()
@@ -225,6 +232,7 @@ function! s:maps()
   nnoremap <buffer> rh :call <sid>resetBranch('hard')<cr>
   nnoremap <buffer> rs :call <sid>resetBranch('soft')<cr>
   nnoremap <buffer> cs :call <sid>squash()<cr>
+  nnoremap <buffer> ca :call <sid>amend()<cr>
 
   nmap              <buffer> <C-n> ]]o
   nmap              <buffer> <C-p> [[o
