@@ -120,6 +120,15 @@ function! s:open(visual, ...)
   echo
 endfunction
 
+function! s:amend()
+  let sha = gv#sha()
+  if empty(sha)
+    return s:shrug()
+  endif
+  execute 'Gcommit --amend'
+endfunction
+
+
 function! s:dot()
   let sha = gv#sha()
   return empty(sha) ? '' : ':Git  '.sha."\<s-left>\<left>"
@@ -183,6 +192,7 @@ function! s:maps()
   xnoremap <silent> <buffer> <expr> ][ <sid>move('')
   xnoremap <silent> <buffer> <expr> [[ <sid>move('b')
   xnoremap <silent> <buffer> <expr> [] <sid>move('b')
+  nnoremap <buffer> ca :call <sid>amend()<cr>
 
   nmap              <buffer> <C-n> ]]o
   nmap              <buffer> <C-p> [[o
