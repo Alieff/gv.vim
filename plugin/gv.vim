@@ -120,6 +120,31 @@ function! s:open(visual, ...)
   echo
 endfunction
 
+function! gv#lastStash()
+  let git_dir = s:git_dir()
+  let fugitive_repo = fugitive#repo(git_dir)
+  let stashlist_cmd = call(fugitive_repo.git_command, ['reflog']+['show']+['--format=%h']+['stash'], fugitive_repo)
+  let stashlist = system(stashlist_cmd)
+  return split(stashlist, "\r")[0]
+endfunction
+
+function! s:resetBranch(mode)
+  let sha = gv#sha()
+  let branch = gv#sha()
+  let option = a:mode == 'hard' ? "--hard" : ""
+  if empty(sha)
+    return s:shrug()
+  endif
+  let prevtopstash = gv#lastStash()
+  execute 'G stash'
+  execute 'G reset '.option.' '.sha
+  " need to add if, if the nothing to be stashed
+  let currenttopstash = gv#lastStash()
+  if prevtopstash != currenttopstash
+    execute 'G stash pop'
+  endif
+endfunction
+
 function! s:dot()
   let sha = gv#sha()
   return empty(sha) ? '' : ':Git  '.sha."\<s-left>\<left>"
@@ -182,6 +207,9 @@ function! s:maps()
   xnoremap <silent> <buffer> <expr> ][ <sid>move('')
   xnoremap <silent> <buffer> <expr> [[ <sid>move('b')
   xnoremap <silent> <buffer> <expr> [] <sid>move('b')
+  " COM: custom remap
+  nnoremap <buffer> rh :call <sid>resetBranch('hard')<cr>
+  nnoremap <buffer> rs :call <sid>resetBranch('soft')<cr>
 
   nmap              <buffer> <C-n> ]]o
   nmap              <buffer> <C-p> [[o
