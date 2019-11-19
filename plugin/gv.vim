@@ -299,6 +299,8 @@ function! s:maps()
   xnoremap <silent> <buffer> <expr> [[ <sid>move('b')
   xnoremap <silent> <buffer> <expr> [] <sid>move('b')
   " COM: custom remap
+  nnoremap <buffer> <s-j> 4gjzz
+  nnoremap <buffer> <s-k> 4gkzz
   nnoremap <buffer> rh :call <sid>resetBranch('hard')<cr>
   nnoremap <buffer> rs :call <sid>resetBranch('soft')<cr>
   nnoremap <buffer> cs :call <sid>squash()<cr>
