@@ -157,6 +157,20 @@ function! s:resetBranch(mode)
   endif
 endfunction
 
+function! s:squash()
+  let sha = gv#sha()
+  if empty(sha)
+    return s:shrug()
+  endif
+  execute 'G stash'
+  let commitmsg = trim(system('git log --format=%B -n 1 '.sha))
+  let parent = trim(system('git rev-parse '.sha.'^'))
+  execute 'G reset --soft '.parent
+  execute 'G commit -m "'.commitmsg.'"'
+  execute 'G stash pop'
+endfunction
+
+
 function! s:dot()
   let sha = gv#sha()
   return empty(sha) ? '' : ':Git  '.sha."\<s-left>\<left>"
@@ -223,6 +237,7 @@ function! s:maps()
   " COM: custom remap
   nnoremap <buffer> rh :call <sid>resetBranch('hard')<cr>
   nnoremap <buffer> rs :call <sid>resetBranch('soft')<cr>
+  nnoremap <buffer> cs :call <sid>squash()<cr>
 
   nmap              <buffer> <C-n> ]]o
   nmap              <buffer> <C-p> [[o
