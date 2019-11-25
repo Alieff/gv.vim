@@ -34,6 +34,19 @@ function! gv#sha(...)
   return matchstr(get(a:000, 0, getline('.')), s:begin.'\zs[a-f0-9]\+')
 endfunction
 
+function! gv#branch(sha)
+  let sha = a:sha
+  if empty(sha)
+    return s:shrug()
+  endif
+  let git_dir = s:git_dir()
+  let fugitive_repo = fugitive#repo(git_dir)
+  let branch_cmd = call(fugitive_repo.git_command, ['branch']+['--contains']+[sha], fugitive_repo)
+  let branch = trim(system(branch_cmd))
+  let branch = split(branch, ' ') "we split because the result is '* branch name'
+  return branch[1]
+endfunction
+
 function! gv#stashIndex(...)
   let sha = gv#sha()
   if empty(sha)
@@ -134,6 +147,21 @@ function! s:open(visual, ...)
   wincmd p
   echo
 endfunction
+
+function! s:pushPartial()
+  let sha = gv#sha()
+  let branch = gv#branch(sha)
+  if empty(sha)
+    return s:shrug()
+  endif
+
+  let git_dir = s:git_dir()
+  let fugitive_repo = fugitive#repo(git_dir)
+  let push_cmd = call(fugitive_repo.git_command, ['push']+['origin']+[sha.':'.branch], fugitive_repo)
+  " let cmd = 'G push origin '.sha.':'.branch
+  execute '!'.push_cmd
+endfunction
+
 
 " get the sha of last stashed item, will be used by 's:resetBranch'
 function! gv#lastStash()
@@ -303,6 +331,7 @@ function! s:maps()
   nnoremap <buffer> <s-k> 4gkzz
   nnoremap <buffer> u :GV<cr>
   nnoremap <buffer> a :GV --all<cr>
+  nnoremap <buffer> P :call <sid>pushPartial()<cr>
   nnoremap <buffer> rh :call <sid>resetBranch('hard')<cr>
   nnoremap <buffer> rs :call <sid>resetBranch('soft')<cr>
   nnoremap <buffer> cs :call <sid>squash()<cr>
