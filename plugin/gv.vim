@@ -114,17 +114,16 @@ function! s:type(visual)
 endfunction
 
 function! s:split(tab)
+  " kalo argumen "tab" == 1, TODO:EN
   if a:tab
     call s:tabnew()
-  " winnr return the number of the most right window
-  " elseif getwinvar(winnr('$'), 'gv')
-  " $wincmd w " move to the most right window
+  " bikin pindah ke window yg terakhir dibuat, TODO:EN
   elseif exists('g:gv_commit_detail_winnr') && getwinvar(g:gv_commit_detail_winnr, 'gv')
     execute g:gv_commit_detail_winnr.'wincmd w'
     enew
   else
-    " vertical botright new
     vertical new
+    " simpan window id, nanti kita akan pindah kesini, TODO:EN
     let g:gv_commit_detail_winnr=winnr()
   endif
   " set window variable
@@ -137,22 +136,33 @@ function! s:open(visual, ...)
 
   " kalo bukan commit kasih pesan
   if empty(type)
-    echom 'log type is empty'
+    " echom 'log type is empty'
     return s:shrug()
   " kalo link, goto link tsb
   elseif type == 'link'
-    echom 'log type is link'
+    " echom 'log type is link'
     return s:browse(target)
   endif
 
   call s:split(a:0)
   if type == 'commit'
-    echom 'log type is commit'
+    " echom 'log type is commit, target : '.target
     " escape(target, ' ') isinya => fugitive:///var/www/html/rse-aplas-paper/.git//bc16856bcf986d1d4950544c6c0d60946efa7f85
-    execute 'e' escape(target, ' ')
+    " COM: kita mau supaya dia bisa toggle ketika udah dibuka
+    if exists('g:gitoctopus_lasttarget') && target == g:gitoctopus_lasttarget  && g:gitoctopus_preview_state == "open"
+      execute 'q'
+      let g:gitoctopus_lasttarget = 'we want open it again after we close, even the target is still the same'
+      let g:gitoctopus_preview_state = 'closed'
+    else
+      execute 'e' escape(target, ' ')
+      let g:gitoctopus_preview_state = 'open'
+    endif
+    normal zM
+    execute 'set nowrap'
     nnoremap <silent> <buffer> gb :Gbrowse<cr>
+    let g:gitoctopus_lasttarget = target
   elseif type == 'diff'
-    echom 'log type is diff'
+    " echom 'log type is diff'
     call s:scratch()
     call s:fill(target)
     setf diff
@@ -381,8 +391,8 @@ function! s:maps()
   nnoremap <buffer> rs :call <sid>resetBranch('soft')<cr>
   nnoremap <buffer> cs :call <sid>squash()<cr>
   nnoremap <buffer> ca :call <sid>amend()<cr>
-  nnoremap <buffer> cl :call <sid>stash('list')<cr>
-  nnoremap <buffer> cd :call <sid>stash('drop')<cr>
+  nnoremap <buffer> czl :call <sid>stash('list')<cr>
+  nnoremap <buffer> czd :call <sid>stash('drop')<cr>
   nnoremap <buffer> czz :call <sid>stash('append')<cr>
   nnoremap <buffer> czP :call <sid>stash('pop')<cr>
   nnoremap <buffer> fcm :call <sid>clean('modified-file')<cr>
@@ -474,6 +484,8 @@ function! s:list(fugitive_repo, log_opts)
   let bufname = repo_short_name.' '.join(a:log_opts)
   silent exe (bufexists(bufname) ? 'buffer' : 'file') fnameescape(bufname)
 
+  " git --git-dir=/var/www/html/rse-aplas-paper/.git log '--color=never' '--date=short' '--format=%cd %h%d %s (%an)' --graph
+  " let show_stash_cmd = "$(git --git-dir=/var/www/html/rse-aplas-paper/.git reflog show --format="%h" stash)"
   let show_stash_cmd = call(a:fugitive_repo.git_command, ['reflog']+['show']+['--format=%h']+['stash'], a:fugitive_repo)
   let stash_list_cmd = call(a:fugitive_repo.git_command, ['stash']+['list'], a:fugitive_repo)
 
@@ -483,6 +495,10 @@ function! s:list(fugitive_repo, log_opts)
   else
     let git_log_cmd = git_log_cmd . " $(" . show_stash_cmd . ")"
   endif
+  " echom git_log_cmd
+  " echom show_stash_cmd
+
+  echom git_log_cmd
   call s:fill(git_log_cmd)
   setlocal nowrap tabstop=8 cursorline iskeyword+=#
 
