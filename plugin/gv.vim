@@ -39,7 +39,7 @@ function! gv#branch(sha)
   if empty(sha)
     return s:shrug()
   endif
-  let git_dir = s:git_dir()
+  let git_dir = FugitiveGitDir()
   let fugitive_repo = fugitive#repo(git_dir)
   let branch_cmd = call(fugitive_repo.git_command, ['branch']+['--contains']+[sha], fugitive_repo)
   let branch = trim(system(branch_cmd))
@@ -183,7 +183,7 @@ function! s:pushPartial()
     return s:shrug()
   endif
 
-  let git_dir = s:git_dir()
+  let git_dir = FugitiveGitDir()
   let fugitive_repo = fugitive#repo(git_dir)
   let push_cmd = call(fugitive_repo.git_command, ['push']+['origin']+[sha.':'.branch], fugitive_repo)
   " let cmd = 'G push origin '.sha.':'.branch
@@ -262,7 +262,7 @@ function! s:cherryPick()
   if empty(sha)
     return s:shrug()
   endif
-  let git_dir = s:git_dir()
+  let git_dir = FugitiveGitDir()
   let fugitive_repo = fugitive#repo(git_dir)
   let cherrypick_cmd = call(fugitive_repo.git_command, ['cherry-pick'], fugitive_repo)
   execute '!'.cherrypick_cmd.' '.sha
@@ -270,7 +270,7 @@ endfunction
 
 
 function! s:clean(mode)
-  let git_dir = s:git_dir()
+  let git_dir = FugitiveGitDir()
   let fugitive_repo = fugitive#repo(git_dir)
   let cleanlist_cmd = call(fugitive_repo.git_command, ['clean']+['-n'], fugitive_repo)
   let cleanlist = system(cleanlist_cmd)
@@ -441,14 +441,6 @@ function! s:setup(git_dir, git_origin)
     let b:git_origin = printf('%s%s/%s', scheme, origin[2], origin[3])
   endif
   let b:git_dir = a:git_dir
-endfunction
-
-" get '.git' path
-function! s:git_dir()
-  if empty(get(b:, 'git_dir', ''))
-    return fugitive#extract_git_dir(expand('%:p'))
-  endif
-  return b:git_dir
 endfunction
 
 " set the current buffer as scratch buffer (no actual file)
