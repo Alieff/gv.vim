@@ -223,6 +223,31 @@ function! s:stash(mode)
   endif
 endfunction
 
+
+function! s:clean(mode)
+  let git_dir = s:git_dir()
+  let fugitive_repo = fugitive#repo(git_dir)
+  let cleanlist_cmd = call(fugitive_repo.git_command, ['clean']+['-n'], fugitive_repo)
+  let cleanlist = system(cleanlist_cmd)
+  let ans = input('you sure?[y/n] this: '.cleanlist)
+  if ans != 'y'
+    return
+  else
+
+  if a:mode == 'modified-file'
+    let clean_cmd = call(fugitive_repo.git_command, ['reset']+['--hard'], fugitive_repo)
+    execute "!".clean_cmd
+  elseif a:mode == 'untracked-file'
+    let clean_cmd = call(fugitive_repo.git_command, ['clean']+['-f'], fugitive_repo)
+    execute "!".clean_cmd
+  elseif a:mode == 'ignored-file'
+    let cleanlist_cmd = call(fugitive_repo.git_command, ['clean']+['-f']+['-X'], fugitive_repo)
+    execute "!".clean_cmd
+  elseif a:mode == 'ignored-folder'
+    let cleanlist_cmd = call(fugitive_repo.git_command, ['clean']+['-fd'], fugitive_repo)
+    execute "!".clean_cmd
+  endif
+endfunction
 function! s:dot()
   let sha = gv#sha()
   return empty(sha) ? '' : ':Git  '.sha."\<s-left>\<left>"
@@ -332,6 +357,12 @@ function! s:maps()
   nnoremap <buffer> cd :call <sid>stash('drop')<cr>
   nnoremap <buffer> czz :call <sid>stash('append')<cr>
   nnoremap <buffer> czP :call <sid>stash('pop')<cr>
+  nnoremap <buffer> fcm :call <sid>clean('modified-file')<cr>
+  nnoremap <buffer> fcu :call <sid>clean('untracked-file')<cr>
+  nnoremap <buffer> fcif :call <sid>clean('ignored-file')<cr>
+  nnoremap <buffer> fcid :call <sid>clean('ignored-folder')<cr>
+  nnoremap <buffer> gitk :!gitk --all<cr>
+  nnoremap <buffer> ? :call Togglegitoctopushelp()<cr>
 
   nmap              <buffer> <C-n> ]]o
   nmap              <buffer> <C-p> [[o
