@@ -235,6 +235,14 @@ function! s:amend()
   execute 'Gcommit --amend'
 endfunction
 
+function! s:cherryPick()
+  let sha = gv#sha()
+  if empty(sha)
+    return s:shrug()
+  endif
+  execute 'G cherry-pick '.sha
+endfunction
+
 function! s:stash(mode)
   let sha = gv#sha()
   if empty(sha)
@@ -383,6 +391,7 @@ function! s:maps()
   nnoremap <buffer> rs :call <sid>resetBranch('soft')<cr>
   nnoremap <buffer> cs :call <sid>squash()<cr>
   nnoremap <buffer> ca :call <sid>amend()<cr>
+  nnoremap <buffer> cp :call <sid>cherrypick()<cr>
   nnoremap <buffer> czl :call <sid>stash('list')<cr>
   nnoremap <buffer> czd :call <sid>stash('drop')<cr>
   nnoremap <buffer> czz :call <sid>stash('append')<cr>
