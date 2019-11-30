@@ -257,6 +257,16 @@ function! s:amend()
   execute 'Gcommit --amend'
 endfunction
 
+function! s:cherryPick()
+  let sha = gv#sha()
+  if empty(sha)
+    return s:shrug()
+  endif
+  let git_dir = s:git_dir()
+  let fugitive_repo = fugitive#repo(git_dir)
+  let cherrypick_cmd = call(fugitive_repo.git_command, ['cherry-pick'], fugitive_repo)
+  execute '!'.cherrypick_cmd.' '.sha
+endfunction
 
 
 function! s:clean(mode)
@@ -391,6 +401,7 @@ function! s:maps()
   nnoremap <buffer> rs :call <sid>resetBranch('soft')<cr>
   nnoremap <buffer> cs :call <sid>squash()<cr>
   nnoremap <buffer> ca :call <sid>amend()<cr>
+  nnoremap <buffer> cp :call <sid>cherryPick()<cr>
   nnoremap <buffer> czl :call <sid>stash('list')<cr>
   nnoremap <buffer> czd :call <sid>stash('drop')<cr>
   nnoremap <buffer> czz :call <sid>stash('append')<cr>
