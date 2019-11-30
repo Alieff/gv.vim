@@ -240,7 +240,10 @@ function! s:cherryPick()
   if empty(sha)
     return s:shrug()
   endif
-  execute 'G cherry-pick '.sha
+  let git_dir = s:git_dir()
+  let fugitive_repo = fugitive#repo(git_dir)
+  let cherrypick_cmd = call(fugitive_repo.git_command, ['cherry-pick'], fugitive_repo)
+  execute '!'.cherrypick_cmd.' '.sha
 endfunction
 
 function! s:stash(mode)
